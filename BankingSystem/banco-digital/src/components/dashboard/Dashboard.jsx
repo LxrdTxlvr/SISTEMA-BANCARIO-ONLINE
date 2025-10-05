@@ -1,8 +1,10 @@
+// src/components/dashboard/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext'; // Importación actualizada para usar el contexto
 import { DollarSign, TrendingUp, Send, ArrowDownLeft, CreditCard, Clock, User, Fingerprint } from 'lucide-react';
 import AccountCard from './AccountCard';
+import TransactionItem from './TransactionItem'; // Importación añadida
 
 export default function Dashboard() {
   const { user, db, biometricAvailable, biometricRegistered, registerBiometric } = useAuth();
@@ -14,10 +16,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadData();
-  }, [user]);
+  }, [user, db]);
 
   const loadData = async () => {
     if (!user || !db) return;
+
+    setLoading(true);
 
     try {
       const userAccounts = await db.getAccountsByUserId(user.id);
@@ -46,7 +50,7 @@ export default function Dashboard() {
   };
 
   const getTotalBalance = () => {
-    return accounts.reduce((sum, acc) => sum + acc.balance, 0);
+    return accounts.reduce((sum, acc) => sum + parseFloat(acc.balance), 0);
   };
 
   if (loading) {
@@ -189,51 +193,6 @@ export default function Dashboard() {
             </button>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-function TransactionItem({ transaction }) {
-  const { ArrowDownLeft, ArrowUpRight, Shield } = require('lucide-react');
-  
-  return (
-    <div className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className={`p-2 rounded-lg ${
-            transaction.type === 'income' 
-              ? 'bg-green-100 dark:bg-green-900' 
-              : 'bg-red-100 dark:bg-red-900'
-          }`}>
-            {transaction.type === 'income' ? (
-              <ArrowDownLeft className="text-green-600 dark:text-green-400" size={20} />
-            ) : (
-              <ArrowUpRight className="text-red-600 dark:text-red-400" size={20} />
-            )}
-          </div>
-          <div>
-            <p className="font-medium text-gray-900 dark:text-white">{transaction.concept}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {new Date(transaction.date).toLocaleDateString('es-MX')}
-            </p>
-            {transaction.requires2FA && (
-              <span className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 mt-1">
-                <Shield size={12} /> 2FA verificado
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="text-right">
-          <p className={`font-semibold ${
-            transaction.type === 'income' 
-              ? 'text-green-600 dark:text-green-400' 
-              : 'text-red-600 dark:text-red-400'
-          }`}>
-            {transaction.type === 'income' ? '+' : ''}${Math.abs(transaction.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">MXN</p>
-        </div>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 // src/services/transactionService.js
 import { supabase } from './supabase'
+import { accountService } from './accountService' // Importación añadida
 
 export const transactionService = {
   // Obtener transacciones de una cuenta
@@ -22,7 +23,7 @@ export const transactionService = {
     
     const { data, error } = await supabase
       .from('transactions')
-      .select('*, accounts(*)')
+      .select('*, accounts(account_number, account_type)')
       .in('account_id', accountIds)
       .order('created_at', { ascending: false })
       .limit(limit)
@@ -38,10 +39,10 @@ export const transactionService = {
     
     // Llamar función de base de datos
     const { data, error } = await supabase.rpc('process_transfer', {
-      from_account_id: fromAccountId,
-      to_account_number: toAccountNumber,
-      transfer_amount: amount,
-      transfer_concept: concept
+      p_from_account_id: fromAccountId,
+      p_to_account_number: toAccountNumber,
+      p_amount: amount,
+      p_concept: concept
     })
     
     if (error) throw error

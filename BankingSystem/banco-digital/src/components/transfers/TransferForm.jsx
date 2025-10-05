@@ -1,8 +1,10 @@
+// src/components/transfers/TransferForm.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { AlertCircle, Shield, Lock } from 'lucide-react';
+import { AlertCircle, Shield, Lock, Loader2 } from 'lucide-react';
 import TwoFactorAuth from './TwoFactorAuth';
+import { transactionService } from '../../services/transactionService';
 
 export default function TransferForm() {
   const { user, db } = useAuth();
@@ -21,7 +23,7 @@ export default function TransferForm() {
 
   useEffect(() => {
     loadAccounts();
-  }, [user]);
+  }, [user, db]);
 
   const loadAccounts = async () => {
     if (!user || !db) return;
@@ -80,32 +82,21 @@ export default function TransferForm() {
         return;
       }
 
-      // Actualizar balance
-      account.balance -= amount;
-      await db.updateAccount(account);
+      // Usar el servicio real para la transferencia
+      const result = await transactionService.makeTransfer(
+        transferForm.accountId,
+        transferForm.recipient,
+        amount,
+        transferForm.concept
+      );
 
-      // Registrar transacción
-      await db.addTransaction({
-        accountId: account.id,
-        type: 'expense',
-        amount: -amount,
-        concept: `Transferencia a ${transferForm.recipient}`,
-        date: new Date().toISOString(),
-        status: 'completed',
-        requires2FA: amount > 1000
-      });
-
-      // Notificación
-      await db.addNotification({
-        userId: user.id,
-        type: 'transaction',
-        message: `Transferencia exitosa de $${amount.toFixed(2)} ${transferForm.currency}`,
-        time: 'Ahora',
-        read: false
-      });
-
-      alert('¡Transferencia realizada exitosamente!');
-      navigate('/');
+      // Si la transferencia fue exitosa, recargar los datos
+      if (result.success) {
+        alert('¡Transferencia realizada exitosamente!');
+        navigate('/');
+      } else {
+        setError(result.error);
+      }
     } catch (error) {
       setError('Error al procesar la transferencia: ' + error.message);
     } finally {
@@ -262,7 +253,14 @@ export default function TransferForm() {
               disabled={loading}
               className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Procesando...' : 'Continuar'}
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin" size={20} />
+                  Procesando...
+                </>
+              ) : (
+                'Continuar'
+              )}
             </button>
           </div>
         </form>

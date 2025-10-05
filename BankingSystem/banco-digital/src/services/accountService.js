@@ -1,5 +1,6 @@
 // src/services/accountService.js
 import { supabase } from './supabase'
+import { authService } from './authService' // Importación añadida
 
 export const accountService = {
   // Obtener cuentas del usuario
