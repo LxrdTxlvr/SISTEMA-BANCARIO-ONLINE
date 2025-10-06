@@ -1,5 +1,6 @@
 // src/services/authService.js
 import { supabase } from './supabase'
+import { accountService } from './accountService'
 
 export const authService = {
   // Login con email y contraseña
@@ -24,16 +25,24 @@ export const authService = {
       }
     })
     if (error) throw error
-    
-    // Crear perfil
+
+    // Crear perfil y cuenta por defecto
     if (data.user) {
       await supabase.from('profiles').insert({
         id: data.user.id,
         email,
         full_name: fullName
       })
+
+      // CAMBIO: Crear una cuenta de ahorros por defecto para el nuevo usuario
+      await accountService.createAccount({
+        user_id: data.user.id,
+        account_type: 'Ahorros',
+        balance: 5000, // Saldo inicial de $5,000
+        currency: 'MXN'
+      })
     }
-    
+
     return data
   },
 

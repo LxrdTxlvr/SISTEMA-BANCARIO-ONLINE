@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Shield, Bell, LogOut, Home, Send, Clock } from 'lucide-react';
 
@@ -54,24 +54,52 @@ export default function Layout() {
       </header>
 
       {/* Navigation */}
-      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-1 overflow-x-auto">
-            <button className="flex items-center gap-2 px-4 py-3 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400">
-              <Home size={18} />
-              <span className="font-medium text-sm">Inicio</span>
-            </button>
-            <button className="flex items-center gap-2 px-4 py-3 border-b-2 border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
-              <Clock size={18} />
-              <span className="font-medium text-sm">Movimientos</span>
-            </button>
-            <button className="flex items-center gap-2 px-4 py-3 border-b-2 border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
-              <Send size={18} />
-              <span className="font-medium text-sm">Transferir</span>
-            </button>
-          </div>
-        </div>
-      </nav>
+   <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* CAMBIO: Se reemplazan los botones por NavLink */}
+      <div className="flex gap-1 overflow-x-auto">
+        <NavLink
+          to="/"
+          className={({ isActive }) =>
+            `flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm ${
+              isActive
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+            }`
+          }
+        >
+          <Home size={18} />
+          <span>Inicio</span>
+        </NavLink>
+        <NavLink
+          to="/transactions"
+          className={({ isActive }) =>
+            `flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm ${
+              isActive
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+            }`
+          }
+        >
+          <Clock size={18} />
+          <span>Movimientos</span>
+        </NavLink>
+        <NavLink
+          to="/transfer"
+          className={({ isActive }) =>
+            `flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm ${
+              isActive
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+            }`
+          }
+        >
+          <Send size={18} />
+          <span>Transferir</span>
+        </NavLink>
+      </div>
+    </div>
+  </nav>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

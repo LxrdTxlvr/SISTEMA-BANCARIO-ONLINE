@@ -39,30 +39,36 @@ export default function TransferForm() {
     }
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     const amount = parseFloat(transferForm.amount);
 
-    if (!transferForm.accountId) {
-      setError('Selecciona una cuenta de origen');
-      return;
-    }
-
-    if (amount <= 0) {
-      setError('El monto debe ser mayor a 0');
+    if (!transferForm.accountId || amount <= 0 || !transferForm.recipient) {
+      setError('Por favor, completa todos los campos requeridos.');
+      setLoading(false);
       return;
     }
 
     // Si es mayor a 1000, activar 2FA
-    if (amount > 1000 && !show2FA) {
-      setShow2FA(true);
-      return;
+    if (amount > 1000) {
+      try {
+        await sendOtp();
+        setShow2FA(true);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+      // CAMBIO CRÍTICO: Asegúrate de que esta línea exista.
+      // Detiene la función aquí para esperar la verificación del usuario.
+      return; 
     }
 
-    // Procesar transferencia
-    await processTransfer(amount);
+    // Si no requiere 2FA, procesar directamente
+    await processTransfer();
   };
 
   const processTransfer = async (amount) => {
@@ -163,14 +169,14 @@ export default function TransferForm() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Destinatario
+              Email del Destinatario
             </label>
             <input
-              type="text"
+              type="email"
               value={transferForm.recipient}
               onChange={(e) => setTransferForm({...transferForm, recipient: e.target.value})}
               className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Nombre o CLABE"
+              placeholder="email@destinatario.com"
               required
               disabled={loading}
             />

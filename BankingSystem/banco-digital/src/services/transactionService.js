@@ -40,7 +40,7 @@ export const transactionService = {
     // Llamar función de base de datos
     const { data, error } = await supabase.rpc('process_transfer', {
       p_from_account_id: fromAccountId,
-      p_to_account_number: toAccountNumber,
+      p_to_user_email: toAccountNumber,
       p_amount: amount,
       p_concept: concept
     })
@@ -60,7 +60,7 @@ export const transactionService = {
       .from('transactions')
       .insert({
         account_id: accountId,
-        transaction_type: 'deposit',
+        type: 'deposit',
         amount,
         concept,
         status: 'completed'
@@ -72,8 +72,8 @@ export const transactionService = {
     
     // Actualizar balance
     await supabase.rpc('increment_balance', {
-      account_id: accountId,
-      amount
+      p_account_id: accountId,
+      p_amount: amount
     })
     
     return data

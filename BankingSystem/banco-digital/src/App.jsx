@@ -6,6 +6,9 @@ import Login from './components/auth/login';
 import Dashboard from './components/dashboard/Dashboard';
 import Layout from './components/layout/layout';
 import TransferForm from './components/transfers/TransferForm';
+import TransactionsPage from './components/transactions/TransactionsPage';
+import ProfilePage from './components/profile/ProfilePage';
+import DepositPage from './components/deposit/DepositPage';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -32,6 +35,9 @@ function App() {
       }>
         <Route index element={<Dashboard />} />
         <Route path="transfer" element={<TransferForm />} />
+        <Route path="transactions" element={<TransactionsPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="deposit" element={<DepositPage />} />
       </Route>
     </Routes>
   );

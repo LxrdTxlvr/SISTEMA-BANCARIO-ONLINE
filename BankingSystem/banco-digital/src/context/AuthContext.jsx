@@ -1,4 +1,5 @@
 // src/context/AuthContext.jsx
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/services/supabase';
 import { authService } from '@/services/authService';
@@ -22,9 +23,7 @@ export function AuthProvider({ children }) {
         setLoading(false);
       }
     );
-    
-    // Aquí puedes verificar la disponibilidad de la WebAuthn API si lo deseas.
-    // Aunque el código anterior es un placeholder, lo mantenemos como ejemplo.
+
     if (window.isSecureContext) {
       navigator.credentials.get({ publicKey: { challenge: new Uint8Array() }, mediation: 'conditional' })
         .then(() => setBiometricAvailable(true))
@@ -40,22 +39,28 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // CAMBIO AQUÍ: Se corrige la función 'login' con try/catch
   const login = async (email, password) => {
-    const { data, error } = await authService.signIn(email, password);
-    if (error) {
+    try {
+      const data = await authService.signIn(email, password);
+      loggingService.logSecurityEvent('login_success', { userId: data.user.id });
+      return data;
+    } catch (error) {
       loggingService.logSecurityEvent('login_failed', { reason: error.message });
-      throw new Error('Credenciales de inicio de sesión no válidas.');
+      // Ahora arrojamos el error original de Supabase
+      throw error;
     }
-    loggingService.logSecurityEvent('login_success', { userId: data.user.id });
-    return data;
   };
 
+  // CAMBIO AQUÍ: Se corrige la función 'register' con try/catch
   const register = async (name, email, password) => {
-    const { data, error } = await authService.signUp(email, password, name);
-    if (error) {
-      throw new Error('Error al registrar usuario: ' + error.message);
+    try {
+      const data = await authService.signUp(email, password, name);
+      return data;
+    } catch (error) {
+      // Arrojamos el error original para que el formulario lo muestre
+      throw error;
     }
-    return data;
   };
 
   const signOut = async () => {
@@ -84,7 +89,6 @@ export function AuthProvider({ children }) {
     biometricRegistered: false,
     loginWithBiometric,
     registerBiometric,
-    // Pasamos directamente los servicios para que los componentes puedan usarlos.
     db: {
       getAccountsByUserId: accountService.getUserAccounts,
       getTransactionsByUserId: transactionService.getUserTransactions,

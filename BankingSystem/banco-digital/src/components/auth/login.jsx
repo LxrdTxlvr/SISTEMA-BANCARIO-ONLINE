@@ -11,7 +11,7 @@ export default function Login() {
   const [showRegister, setShowRegister] = useState(false);
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(false);
   
   const { login, loginWithBiometric, register, biometricAvailable } = useAuth();
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ export default function Login() {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(err.message);
+      console.error("Error de inicio de sesión:", err.message);
     } finally {
       setLoading(false);
     }
@@ -48,16 +48,14 @@ export default function Login() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       await register(registerForm.name, registerForm.email, registerForm.password);
-      setError('');
       alert('¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.');
       setShowRegister(false);
       setRegisterForm({ name: '', email: '', password: '' });
     } catch (err) {
-      setError(err.message);
+      console.error("Error al registrar:", err.message);
     } finally {
       setLoading(false);
     }
@@ -75,16 +73,9 @@ export default function Login() {
               BancoDigital
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Banca segura en línea - Versión Local
+              Banca Online
             </p>
           </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-start gap-2">
-              <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
 
           {!showRegister ? (
             <form onSubmit={handleLogin} className="space-y-6">
