@@ -1,10 +1,9 @@
 // src/components/dashboard/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import {  Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext'; // Importación actualizada para usar el contexto
-import { DollarSign, TrendingUp, Send, ArrowDownLeft, CreditCard, Clock, User, Fingerprint } from 'lucide-react';
-import AccountCard from './AccountCard';
-import TransactionItem from './TransactionItem'; // Importación añadida
+import { useAuth } from '../../context/AuthContext';
+import { DollarSign, TrendingUp, Send, ArrowDownLeft, Clock, User, Fingerprint } from 'lucide-react';
+import TransactionItem from './TransactionItem';
 
 export default function Dashboard() {
   const { user, db, biometricAvailable, biometricRegistered, registerBiometric } = useAuth();
@@ -118,55 +117,47 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
-      {/* Cuentas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {accounts.map((account) => (
-          <AccountCard key={account.id} account={account} />
-        ))}
-      </div>
-
       {/* Acciones rápidas */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Link
-        to="/transfer"
-        className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:shadow-lg transition-all transform hover:scale-105 border border-gray-200 dark:border-gray-700 text-left"
-      >
-        <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg w-fit mb-3">
-          <Send className="text-blue-600 dark:text-blue-400" size={24} />
-        </div>
-        <p className="text-sm font-medium text-gray-900 dark:text-white">Transferir</p>
-      </Link>
+        <Link
+          to="/transfer"
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:shadow-lg transition-all transform hover:scale-105 border border-gray-200 dark:border-gray-700 text-left"
+        >
+          <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg w-fit mb-3">
+            <Send className="text-blue-600 dark:text-blue-400" size={24} />
+          </div>
+          <p className="text-sm font-medium text-gray-900 dark:text-white">Transferir</p>
+        </Link>
 
-      <Link
-        to="/transactions"
-        className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:shadow-lg transition-all transform hover:scale-105 border border-gray-200 dark:border-gray-700 text-left"
-      >
-        <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-lg w-fit mb-3">
-          <Clock className="text-purple-600 dark:text-purple-400" size={24} />
-        </div>
-        <p className="text-sm font-medium text-gray-900 dark:text-white">Historial</p>
-      </Link>
+        <Link
+          to="/transactions"
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:shadow-lg transition-all transform hover:scale-105 border border-gray-200 dark:border-gray-700 text-left"
+        >
+          <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-lg w-fit mb-3">
+            <Clock className="text-purple-600 dark:text-purple-400" size={24} />
+          </div>
+          <p className="text-sm font-medium text-gray-900 dark:text-white">Historial</p>
+        </Link>
 
-      <Link
-        to="/deposit"
-        className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:shadow-lg transition-all transform hover:scale-105 border border-gray-200 dark:border-gray-700 text-left"
-      >
-        <div className="bg-green-100 dark:bg-green-900 p-3 rounded-lg w-fit mb-3">
-          <ArrowDownLeft className="text-green-600 dark:text-green-400" size={24} />
-        </div>
-        <p className="text-sm font-medium text-gray-900 dark:text-white">Depositar</p>
-      </Link>
+        <Link
+          to="/deposit"
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:shadow-lg transition-all transform hover:scale-105 border border-gray-200 dark:border-gray-700 text-left"
+        >
+          <div className="bg-green-100 dark:bg-green-900 p-3 rounded-lg w-fit mb-3">
+            <ArrowDownLeft className="text-green-600 dark:text-green-400" size={24} />
+          </div>
+          <p className="text-sm font-medium text-gray-900 dark:text-white">Depositar</p>
+        </Link>
 
-      <Link
-        to="/profile"
-        className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:shadow-lg transition-all transform hover:scale-105 border border-gray-200 dark:border-gray-700 text-left"
-      >
-        <div className="bg-orange-100 dark:bg-orange-900 p-3 rounded-lg w-fit mb-3">
-          <User className="text-orange-600 dark:text-orange-400" size={24} />
-        </div>
-        <p className="text-sm font-medium text-gray-900 dark:text-white">Perfil</p>
-      </Link>
+        <Link
+          to="/profile"
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:shadow-lg transition-all transform hover:scale-105 border border-gray-200 dark:border-gray-700 text-left"
+        >
+          <div className="bg-orange-100 dark:bg-orange-900 p-3 rounded-lg w-fit mb-3">
+            <User className="text-orange-600 dark:text-orange-400" size={24} />
+          </div>
+          <p className="text-sm font-medium text-gray-900 dark:text-white">Perfil</p>
+        </Link>
       </div>
 
       {/* Transacciones recientes */}
@@ -184,16 +175,6 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        {transactions.length > 5 && (
-          <div className="p-4 bg-gray-50 dark:bg-gray-900">
-            <button
-              onClick={() => navigate('/transactions')}
-              className="w-full text-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm"
-            >
-              Ver todos los movimientos →
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

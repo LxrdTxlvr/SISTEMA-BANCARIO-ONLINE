@@ -26,15 +26,16 @@ export const authService = {
     })
     if (error) throw error
 
-    // Crear perfil y cuenta por defecto
+    // Crear perfil con código 2FA por defecto
     if (data.user) {
       await supabase.from('profiles').insert({
         id: data.user.id,
         email,
-        full_name: fullName
+        full_name: fullName,
+        two_factor_code: '123456' // Código por defecto
       })
 
-      // CAMBIO: Crear una cuenta de ahorros por defecto para el nuevo usuario
+      // Crear una cuenta de ahorros por defecto para el nuevo usuario
       await accountService.createAccount({
         user_id: data.user.id,
         account_type: 'Ahorros',
@@ -64,5 +65,23 @@ export const authService = {
     const { data: { user }, error } = await supabase.auth.getUser()
     if (error) throw error
     return user
+  },
+
+  // Obtener código 2FA del usuario
+  async get2FACode(userId) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('two_factor_code')
+      .eq('id', userId)
+      .single()
+    
+    if (error) throw error
+    return data?.two_factor_code || '123456' // Por defecto si no existe
+  },
+
+  // Verificar código 2FA
+  async verify2FA(userId, code) {
+    const savedCode = await this.get2FACode(userId)
+    return code === savedCode
   }
 }

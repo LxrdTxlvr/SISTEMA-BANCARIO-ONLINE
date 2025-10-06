@@ -2,16 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { AlertCircle, Shield, Lock, Loader2 } from 'lucide-react';
+import { AlertCircle, Shield, Loader2 } from 'lucide-react';
 import TwoFactorAuth from './TwoFactorAuth';
 import { transactionService } from '../../services/transactionService';
+import { authService } from '../../services/authService';
 
 export default function TransferForm() {
   const { user, db } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [transferForm, setTransferForm] = useState({
     accountId: null,
-    recipient: '',
+    toUserEmail: '',
     amount: '',
     currency: 'MXN',
     concept: ''
@@ -39,7 +40,7 @@ export default function TransferForm() {
     }
   };
 
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -52,76 +53,114 @@ const handleSubmit = async (e) => {
       return;
     }
 
+    // Verificar saldo antes de continuar
+    const account = accounts.find(acc => acc.id === transferForm.accountId);
+    if (!account) {
+      setError('Cuenta no encontrada');
+      setLoading(false);
+      return;
+    }
+
+    if (account.balance < amount) {
+      setError('Saldo insuficiente');
+      setLoading(false);
+      return;
+    }
+
     // Si es mayor a 1000, activar 2FA
     if (amount > 1000) {
-      try {
-        await sendOtp();
-        setShow2FA(true);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-      // CAMBIO CRÍTICO: Asegúrate de que esta línea exista.
-      // Detiene la función aquí para esperar la verificación del usuario.
-      return; 
+      setShow2FA(true);
+      setLoading(false);
+      return; // IMPORTANTE: Detener ejecución aquí
     }
 
     // Si no requiere 2FA, procesar directamente
     await processTransfer();
   };
 
-  const processTransfer = async (amount) => {
+  const processTransfer = async () => {
     setLoading(true);
     setError('');
 
     try {
-      const account = accounts.find(acc => acc.id === transferForm.accountId);
+      const amount = parseFloat(transferForm.amount);
 
-      if (!account) {
-        setError('Cuenta no encontrada');
-        return;
-      }
-
-      if (account.balance < amount) {
-        setError('Saldo insuficiente');
-        return;
-      }
+      console.log('Iniciando transferencia:', {
+        accountId: transferForm.accountId,
+        recipient: transferForm.recipient,
+        amount: amount,
+        concept: transferForm.concept
+      });
 
       // Usar el servicio real para la transferencia
       const result = await transactionService.makeTransfer(
         transferForm.accountId,
-        transferForm.recipient,
+        transferForm.toUserEmail,
         amount,
-        transferForm.concept
+        transferForm.concept || 'Transferencia'
       );
 
-      // Si la transferencia fue exitosa, recargar los datos
-      if (result.success) {
+      console.log('Resultado de transferencia:', result);
+
+      // Verificar diferentes estructuras de respuesta
+      if (result && (result.success === true || result.data?.success === true)) {
         alert('¡Transferencia realizada exitosamente!');
         navigate('/');
       } else {
-        setError(result.error);
+        // Extraer mensaje de error de diferentes estructuras posibles
+        const errorMsg = 
+          result?.error || 
+          result?.data?.error || 
+          result?.message || 
+          'Error al procesar la transferencia. Verifica que el destinatario tenga una cuenta activa.';
+        
+        setError(errorMsg);
+        console.error('Error de transferencia:', result);
       }
     } catch (error) {
-      setError('Error al procesar la transferencia: ' + error.message);
+      console.error('Error en transferencia (catch):', error);
+      
+      // Manejo detallado de errores
+      let errorMessage = 'Error al procesar la transferencia';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error) {
+        errorMessage = error.error;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   const handle2FASuccess = async (code) => {
-    if (code === '123456') {
-      await processTransfer(parseFloat(transferForm.amount));
+    setError('');
+    
+    try {
+      // Verificar código 2FA con el código personalizado del usuario
+      const isValid = await authService.verify2FA(user.id, code);
+      
+      if (!isValid) {
+        setError('Código 2FA incorrecto');
+        return;
+      }
+
+      await processTransfer();
       setShow2FA(false);
-    } else {
-      setError('Código 2FA incorrecto');
+    } catch (error) {
+      setError('Error al verificar el código 2FA');
+      console.error('Error 2FA:', error);
     }
   };
 
   const handle2FACancel = () => {
     setShow2FA(false);
     setError('');
+    setLoading(false);
   };
 
   if (show2FA) {
@@ -131,6 +170,8 @@ const handleSubmit = async (e) => {
         accounts={accounts}
         onSuccess={handle2FASuccess}
         onCancel={handle2FACancel}
+        error={error}
+        loading={loading}
       />
     );
   }
@@ -161,7 +202,7 @@ const handleSubmit = async (e) => {
             >
               {accounts.map(acc => (
                 <option key={acc.id} value={acc.id}>
-                  {acc.type} - {acc.number} (${acc.balance.toFixed(2)} {acc.currency})
+                  {acc.account_type} - {acc.account_number} (${parseFloat(acc.balance || 0).toFixed(2)} {acc.currency})
                 </option>
               ))}
             </select>
@@ -173,8 +214,8 @@ const handleSubmit = async (e) => {
             </label>
             <input
               type="email"
-              value={transferForm.recipient}
-              onChange={(e) => setTransferForm({...transferForm, recipient: e.target.value})}
+              value={transferForm.toUserEmail}
+              onChange={(e) => setTransferForm({...transferForm, toUserEmail: e.target.value})}
               className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="email@destinatario.com"
               required
@@ -257,7 +298,7 @@ const handleSubmit = async (e) => {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
