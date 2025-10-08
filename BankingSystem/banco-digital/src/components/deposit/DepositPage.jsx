@@ -4,9 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query'; 
 import { transactionService } from '../../services/transactionService';
-
-import { Loader2, ArrowDownLeft, Shield, Lock } from 'lucide-react';
-
+import { Loader2, ArrowDownLeft } from 'lucide-react';
 
 export default function DepositPage() {
   const { user, db } = useAuth();
@@ -18,7 +16,6 @@ export default function DepositPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
 
   useEffect(() => {
     const loadAccounts = async () => {
@@ -54,18 +51,19 @@ export default function DepositPage() {
     try {
       const depositAmount = parseFloat(amount);
       await transactionService.createDeposit(selectedAccount, depositAmount, 'Depósito en línea');
+      
+      // Invalidar queries para actualizar los datos
       await queryClient.invalidateQueries({ queryKey: ['accounts'] });
       await queryClient.invalidateQueries({ queryKey: ['transactions'] });
       
-      setSuccess(`¡Depósito de ${depositAmount.toFixed(2)} realizado con éxito!`);
+      setSuccess(`¡Depósito de $${depositAmount.toFixed(2)} MXN realizado con éxito!`);
       setAmount('');
-      setShow2FA(false);
       
       // Redirigir después de 2 segundos
       setTimeout(() => navigate('/'), 2000);
     } catch (err) {
-      setError('Hubo un error al procesar el depósito.');
-      console.error(err);
+      setError('Hubo un error al procesar el depósito. Por favor, intenta de nuevo.');
+      console.error('Error en depósito:', err);
     } finally {
       setLoading(false);
     }
@@ -75,12 +73,23 @@ export default function DepositPage() {
     <div className="max-w-2xl mx-auto">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center gap-4 mb-6">
-          <ArrowDownLeft className="text-green-500" size={32} />
+          <div className="bg-green-100 dark:bg-green-900 p-3 rounded-lg">
+            <ArrowDownLeft className="text-green-600 dark:text-green-400" size={32} />
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Realizar un Depósito</h2>
         </div>
 
-        {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>}
-        {success && <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg">{success}</div>}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg font-medium">
+            {success}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -90,7 +99,7 @@ export default function DepositPage() {
             <select 
               value={selectedAccount}
               onChange={(e) => setSelectedAccount(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               required
               disabled={loading || accounts.length === 0}
             >
@@ -111,7 +120,7 @@ export default function DepositPage() {
               step="0.01"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="0.00"
               required
               disabled={loading}
@@ -123,14 +132,14 @@ export default function DepositPage() {
               type="button"
               onClick={() => navigate('/')}
               disabled={loading}
-              className="flex-1 px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Volver
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
             >
               {loading ? (
                 <>
@@ -139,6 +148,7 @@ export default function DepositPage() {
                 </>
               ) : (
                 <>
+                  <ArrowDownLeft size={20} />
                   Depositar
                 </>
               )}

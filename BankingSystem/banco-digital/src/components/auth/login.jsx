@@ -70,7 +70,7 @@ export default function Login() {
               <Shield className="text-white" size={32} />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              BancoDigital
+              Banco Digital Online
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
               Banca Online
@@ -118,12 +118,6 @@ export default function Login() {
                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
                     </div>
-                  </div>
-
-                  <div className="bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 text-sm text-blue-700 dark:text-blue-300">
-                    <strong>Usuario Demo:</strong><br/>
-                    Email: demo@bancodigital.com<br/>
-                    Contraseña: demo123
                   </div>
 
                   <button
@@ -257,7 +251,7 @@ export default function Login() {
         </div>
         
         <div className="mt-4 text-center text-white text-sm space-y-1">
-          <p>🔒 Datos almacenados localmente en tu navegador</p>
+          <p>🔒 Datos almacenados en Supabase de manera online</p>
           {biometricAvailable && <p>✅ Autenticación biométrica disponible</p>}
         </div>
       </div>

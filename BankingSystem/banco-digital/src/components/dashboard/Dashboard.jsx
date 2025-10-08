@@ -77,7 +77,7 @@ export default function Dashboard() {
         <div className="flex gap-4 text-sm">
           <div className="flex items-center gap-1">
             <TrendingUp size={16} />
-            <span>Sistema Local Activo</span>
+            <span>Sistema Online Activo</span>
           </div>
         </div>
       </div>
