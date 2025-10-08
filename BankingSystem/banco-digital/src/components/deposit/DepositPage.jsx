@@ -4,9 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query'; 
 import { transactionService } from '../../services/transactionService';
-import { authService } from '../../services/authService';
+
 import { Loader2, ArrowDownLeft, Shield, Lock } from 'lucide-react';
-import TwoFactorAuth from '../transfers/TwoFactorAuth';
+
 
 export default function DepositPage() {
   const { user, db } = useAuth();
@@ -18,7 +18,7 @@ export default function DepositPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [show2FA, setShow2FA] = useState(false);
+  
 
   useEffect(() => {
     const loadAccounts = async () => {
@@ -44,19 +44,6 @@ export default function DepositPage() {
       setError('Por favor, selecciona una cuenta e ingresa un monto válido.');
       return;
     }
-
-    console.log('Monto del depósito:', depositAmount);
-    console.log('¿Requiere 2FA?', depositAmount > 1000);
-
-    // Solo requerir 2FA para depósitos mayores a $1,000
-    if (depositAmount > 1000) {
-      console.log('Activando 2FA...');
-      setShow2FA(true);
-      return; // IMPORTANTE: Detener aquí y esperar 2FA
-    }
-
-    // Si es menor o igual a 1000, procesar directamente sin 2FA
-    console.log('Procesando sin 2FA...');
     await processDeposit();
   };
 
@@ -84,50 +71,6 @@ export default function DepositPage() {
     }
   };
 
-  const handle2FASuccess = async (code) => {
-    setError('');
-    
-    try {
-      // Verificar código 2FA con el código personalizado del usuario
-      const isValid = await authService.verify2FA(user.id, code);
-      
-      if (!isValid) {
-        setError('Código 2FA incorrecto');
-        setLoading(false);
-        return;
-      }
-
-      await processDeposit();
-    } catch (error) {
-      setError('Error al verificar el código 2FA');
-      console.error('Error 2FA:', error);
-      setLoading(false);
-    }
-  };
-
-  const handle2FACancel = () => {
-    setShow2FA(false);
-    setError('');
-    setLoading(false);
-  };
-
-  // Si está en modo 2FA, mostrar el componente de verificación
-  if (show2FA) {
-    return (
-      <TwoFactorAuth
-        transferData={{
-          amount: amount,
-          concept: 'Depósito en línea',
-          currency: 'MXN'
-        }}
-        onSuccess={handle2FASuccess}
-        onCancel={handle2FACancel}
-        error={error}
-        loading={loading}
-      />
-    );
-  }
-
   return (
     <div className="max-w-2xl mx-auto">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -135,23 +78,6 @@ export default function DepositPage() {
           <ArrowDownLeft className="text-green-500" size={32} />
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Realizar un Depósito</h2>
         </div>
-
-        {/* Advertencia de 2FA - Solo si el monto es mayor a 1000 */}
-        {parseFloat(amount) > 1000 && (
-          <div className="mb-6 bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Shield className="text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" size={20} />
-              <div>
-                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                  Autenticación de dos factores requerida
-                </p>
-                <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                  Los depósitos mayores a $1,000 MXN requieren verificación adicional
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>}
         {success && <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg">{success}</div>}
@@ -213,8 +139,7 @@ export default function DepositPage() {
                 </>
               ) : (
                 <>
-                  <Lock size={20} />
-                  Continuar con verificación
+                  Depositar
                 </>
               )}
             </button>

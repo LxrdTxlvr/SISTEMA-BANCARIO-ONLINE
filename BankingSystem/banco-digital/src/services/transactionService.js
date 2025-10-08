@@ -32,19 +32,21 @@ export const transactionService = {
     return data
   },
 
-  // Realizar transferencia (CORREGIDO)
+  // Realizar transferencia (ARREGLO: Nombre de la función RPC)
   async makeTransfer(fromAccountId, toUserEmail, amount, concept) {
     try {
+
       // 1. Asegurar tipos de datos
       const requires2FA = parseFloat(amount) > 1000
       const transferAmount = parseFloat(amount);
       
       // 2. Llamar función de base de datos con los parámetros correctos
-      const { data, error } = await supabase.rpc('process_transfer', {
-        p_from_account_id: fromAccountId, // UUID (string)
-        p_to_user_email: toUserEmail, // TEXT (Cambiado de toUserEmail)
-        p_amount: transferAmount, // NUMERIC (number)
-        p_concept: concept // TEXT
+      // CAMBIO CRÍTICO: Usar 'process_transfer_by_email' como sugiere el log.
+      const { data, error } = await supabase.rpc('process_transfer_by_email', {
+        p_from_account_id: fromAccountId, 
+        p_to_user_email: toUserEmail, 
+        p_amount: transferAmount, 
+        p_concept: concept 
       })
     
       if (error) {
@@ -66,21 +68,20 @@ export const transactionService = {
     }
   },
 
-  // Crear depósito (CORREGIDO)
+  // Crear depósito (ARREGLO: Eliminación de columna no existente)
   async createDeposit(accountId, amount, concept) {
     try {
       // Insertar transacción
-      const isLargeDeposit = parseFloat(amount) > 1000;
       
       const { data: transaction, error: txError } = await supabase
         .from('transactions')
         .insert({
           account_id: accountId,
-          type: 'deposit', // COLUMNA CORREGIDA
+          type: 'deposit', 
           amount: parseFloat(amount),
           concept,
           status: 'completed',
-          requires2FA: isLargeDeposit // COLUMNA CORREGIDA
+          // SE ELIMINA 'requires2FA' para corregir el error PGRST204.
         })
         .select()
         .single()
@@ -88,7 +89,6 @@ export const transactionService = {
       if (txError) throw txError
       
       // Actualizar balance usando la función RPC
-      // NOTA: Se asume que la función 'increment_balance' existe en tu DB
       const { error: balanceError } = await supabase.rpc('increment_balance', {
         p_account_id: accountId,
         p_amount: amount
@@ -111,7 +111,7 @@ export const transactionService = {
       .eq('account_id', accountId)
     
     if (filters.type) {
-      query = query.eq('type', filters.type) // COLUMNA CORREGIDA
+      query = query.eq('type', filters.type)
     }
     
     if (filters.dateFrom) {

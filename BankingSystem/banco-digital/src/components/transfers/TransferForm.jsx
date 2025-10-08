@@ -47,7 +47,7 @@ export default function TransferForm() {
 
     const amount = parseFloat(transferForm.amount);
 
-    if (!transferForm.accountId || amount <= 0 || !transferForm.recipient) {
+    if (!transferForm.accountId || amount <= 0 || !transferForm.toUserEmail) {
       setError('Por favor, completa todos los campos requeridos.');
       setLoading(false);
       return;
@@ -87,7 +87,7 @@ export default function TransferForm() {
 
       console.log('Iniciando transferencia:', {
         accountId: transferForm.accountId,
-        recipient: transferForm.recipient,
+        recipient: transferForm.toUserEmail,
         amount: amount,
         concept: transferForm.concept
       });
